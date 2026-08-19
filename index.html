@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elise's Poked Pieces, Waitlist Form</title>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-storage-compat.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F3F1E9;
+    --panel:#EDEADF;
+    --ink:#1C1C18;
+    --muted:#8F8C7E;
+    --line:#D8D4C6;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .page{ max-width:720px; margin:0 auto; padding:36px 24px 100px; }
+
+  nav{
+    display:flex; justify-content:space-between; align-items:baseline;
+    padding-bottom:40px; border-bottom:1px solid var(--ink);
+    font-size:12px; letter-spacing:0.06em; text-transform:uppercase;
+  }
+  nav .brand{ font-weight:600; }
+  nav .place{ color:var(--muted); }
+
+  .eyebrow{
+    display:flex; align-items:center; gap:8px;
+    font-size:12px; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted);
+    margin:44px 0 18px;
+  }
+
+  h1{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:clamp(30px, 6vw, 44px);
+    letter-spacing:-0.01em;
+    margin:0 0 26px;
+    line-height:1.05;
+  }
+
+  .intro{
+    font-size:14px; line-height:1.85; color:var(--ink); max-width:600px;
+    margin-bottom:44px;
+  }
+
+  .chapter{ margin-top:56px; }
+  .chapter-head{
+    display:flex; align-items:center; gap:8px;
+    font-size:12px; letter-spacing:0.06em; text-transform:uppercase;
+    border-bottom:1px solid var(--ink); padding-bottom:10px; margin-bottom:4px;
+  }
+  .chapter-head .arrow{ color:var(--muted); }
+  .chapter-head .title{ font-weight:600; }
+
+  .field-row{
+    padding:24px 0; border-bottom:1px dashed var(--line);
+  }
+  .field-row:last-child{ border-bottom:none; }
+  label.title{
+    display:block; font-size:13.5px; font-weight:600; margin-bottom:10px; line-height:1.5;
+  }
+  label.title .req{ color:var(--muted); font-weight:400; font-size:11px; text-transform:uppercase; margin-left:8px; }
+  .hint{ font-size:12px; color:var(--muted); line-height:1.7; margin-top:-2px; margin-bottom:12px; }
+
+  input[type=text], input[type=email], input[type=tel], input[type=number], select, textarea{
+    width:100%; font-family:'IBM Plex Mono',monospace; font-size:14px;
+    padding:9px 2px; background:transparent; border:none; border-bottom:1px solid var(--line);
+    color:var(--ink); outline:none;
+  }
+  input::placeholder, textarea::placeholder{ color:#B3AF9D; }
+  input:focus, select:focus, textarea:focus{ border-color:var(--ink); }
+  select{
+    appearance:none; -webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0 L5 6 L10 0' stroke='%238F8C7E' fill='none'/></svg>");
+    background-repeat:no-repeat; background-position:right 4px center;
+  }
+  textarea{
+    background:var(--panel); border:1px solid var(--line); padding:12px;
+    min-height:80px; line-height:1.6; resize:vertical;
+  }
+
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:520px){ .row2{ grid-template-columns:1fr; gap:14px; } }
+
+  .filebox{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    border:1px dashed var(--line); padding:16px 14px; cursor:pointer;
+    font-size:12px; text-transform:uppercase; letter-spacing:0.04em;
+    color:var(--muted); background:var(--panel);
+  }
+  .filebox.has-file{ border-style:solid; color:var(--ink); }
+  .filebox input{ display:none; }
+  .filebox .browse{ color:var(--ink); text-decoration:underline; text-underline-offset:3px; white-space:nowrap; }
+  .add-another-file{
+    margin-top:10px; background:none; border:none; cursor:pointer;
+    font-size:12px; color:var(--ink); text-decoration:underline; text-underline-offset:3px; padding:0;
+  }
+  .extra-file-row{
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:12.5px; color:var(--ink); padding:8px 10px; border:1px solid var(--line);
+    background:var(--panel); margin-bottom:6px;
+  }
+  .extra-file-remove{ background:none; border:none; cursor:pointer; color:var(--muted); font-size:13px; padding:0 0 0 10px; }
+
+  .submit-row{ margin-top:40px; border-top:1px solid var(--line); padding-top:22px; }
+  button[type=submit]{
+    width:100%; background:none; border:none; display:flex; justify-content:space-between; align-items:center;
+    font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--ink); padding:14px 0; cursor:pointer; transition:opacity .15s ease;
+  }
+  button[type=submit]:hover{ opacity:0.6; }
+  .status{ display:none; margin-top:14px; font-size:12px; color:var(--muted); }
+  .status.show{ display:block; }
+
+  footer{ margin-top:80px; border-top:1px solid var(--line); padding-top:22px; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav>
+    <span class="brand">Elise's Poked Pieces</span>
+    <span class="place">Waitlist</span>
+  </nav>
+
+  <div class="eyebrow"><span class="arrow">↓</span><span>Waitlist Form</span></div>
+
+  <h1>Join the waitlist</h1>
+
+  <p class="intro">
+    Thank you so much for your interest in booking in with me. I'm currently taking waitlist requests for the cities listed below, including a few I don't have confirmed dates for yet. My pricing depends on size, design, complexity and placement. Rib, stomach and back tattoos will cost slightly more. If you get multiple tattoos in one session I can also offer a discount. My minimum is £150. As dates open up for each city I'll work through the waitlist in order, so please fill this in even if it feels early, you'll hear from me once your city is confirmed. Please note that for realism and dotwork custom pieces I need a high quality reference photo to work from. For example, if you'd like a leopard, please find a high quality picture of a leopard that you're happy for me to work directly from on the day. Since it's realism I'm rarely able to make changes to the photo itself, so make sure you're happy with it. You're welcome to ask about small additions or changes and we can discuss further.
+  </p>
+
+  <div class="hint" style="border:1px solid var(--line); background:var(--panel); padding:14px 16px; margin-bottom:44px; font-size:12px;">
+    Please note, joining the waitlist does not guarantee an appointment. Once dates are confirmed for your city, I'll email you with a date, price and next steps. You'll have 24 hours to respond before the spot moves to the next person on the list.
+  </div>
+
+  <form id="bookingForm" action="https://formsubmit.co/elise.allison16@gmail.com" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="_subject" value="New waitlist request">
+    <input type="hidden" name="_template" value="table">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="text" name="_honey" style="display:none">
+    <input type="hidden" name="_autoresponse" value="Thank you so much for your interest in joining the waitlist! I will get back to you once dates are confirmed for your city, with a date, price, and next steps. Please be patient, this can take a while depending on the city and how many requests are in.
+
+Love,
+Elise.">
+
+    <!-- ABOUT YOU -->
+    <div class="chapter">
+      <div class="chapter-head"><span class="arrow">↓</span><span class="title">About you</span></div>
+
+      <div class="field-row">
+        <label class="title">City you'd like to be tattooed in<span class="req">required</span></label>
+        <select name="City" required>
+          <option value="">Select a city…</option>
+          <option>Reykjavik</option>
+          <option>Manchester</option>
+          <option>New York</option>
+          <option>LA</option>
+          <option>Paris</option>
+          <option>Brighton</option>
+          <option>Berlin</option>
+          <option>Amsterdam</option>
+          <option>Copenhagen</option>
+          <option>Sydney</option>
+          <option>Melbourne</option>
+          <option>Tokyo</option>
+          <option>Seoul</option>
+        </select>
+      </div>
+
+      <div class="field-row">
+        <label class="title">Name<span class="req">required</span></label>
+        <div class="row2">
+          <input type="text" name="First Name" placeholder="First name" required>
+          <input type="text" name="Last Name" placeholder="Last name" required>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="title">Phone number<span class="req">required</span></label>
+        <div class="row2">
+          <input type="text" name="Area Code" placeholder="Area code" required>
+          <input type="tel" name="Phone Number" placeholder="Phone number" required>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="title">Pronouns<span class="req">required</span></label>
+        <input type="text" name="Pronouns" placeholder="she/her, he/him, they/them…" required>
+      </div>
+
+      <div class="field-row">
+        <label class="title">Instagram handle<span class="req">required</span></label>
+        <div class="hint">This is how I will contact you, so please double check it's correct with no spelling mistakes, and make sure your settings allow us to DM you.</div>
+        <input type="text" name="Instagram" placeholder="@yourhandle" required>
+      </div>
+
+      <div class="field-row">
+        <label class="title">Age<span class="req">required</span></label>
+        <div class="hint">You may be asked to show ID.</div>
+        <input type="number" name="Age" min="16" max="120" style="max-width:140px" required>
+      </div>
+    </div>
+
+    <!-- THE TATTOO -->
+    <div class="chapter">
+      <div class="chapter-head"><span class="arrow">↓</span><span class="title">The tattoo</span></div>
+
+      <div class="field-row">
+        <label class="title">Number of tattoos you'd like<span class="req">required</span></label>
+        <input type="text" name="Tattoo Count" placeholder="e.g. 1, 2, a small set…" required>
+      </div>
+
+      <div class="field-row">
+        <label class="title">Design idea or flash you'd like<span class="req">required</span></label>
+        <textarea name="Tattoo Idea" required></textarea>
+      </div>
+
+      <div class="field-row">
+        <label class="title">Reference photos of the design or idea<span class="req">required</span></label>
+        <label class="filebox" id="fileboxLabel">
+          <span id="fileboxText">Drag a file, or browse</span>
+          <span class="browse">Choose file</span>
+          <input type="file" name="attachment" id="fileInput" required>
+        </label>
+        <div id="extraFilesList" style="margin-top:10px;"></div>
+        <button type="button" id="addAnotherFileBtn" class="add-another-file">+ Add another file</button>
+      </div>
+
+      <div class="field-row">
+        <label class="title">Rough size in cm or inches<span class="req">required</span></label>
+        <div class="hint">Please use a ruler to get this accurate, or a comparison such as a bank card. There's also an online ruler tool you can use on Google. This helps us give you an accurate quote quickly.</div>
+        <input type="text" name="Size" placeholder="e.g. 8cm, palm sized…" required>
+      </div>
+
+      <div class="field-row">
+        <label class="title">Placement ideas<span class="req">required</span></label>
+        <input type="text" name="Placement" placeholder="e.g. forearm, ribs, ankle…" required>
+      </div>
+    </div>
+
+    <!-- BOOKING DETAILS -->
+    <div class="chapter">
+      <div class="chapter-head"><span class="arrow">↓</span><span class="title">Booking details</span></div>
+
+      <div class="field-row">
+        <label class="title">Budget you're looking to spend<span class="req">required</span></label>
+        <div class="hint">My minimum is £150, which would mainly apply to something like a small sparkle. Pieces increase from this based on size, placement, complexity and detail of the design.</div>
+        <input type="text" name="Budget" placeholder="e.g. £150 to 250" required>
+      </div>
+
+      <div class="field-row">
+        <label class="title">How did you find my account?<span class="req">required</span></label>
+        <div class="hint">Instagram, TikTok, an Instagram ad, friend referral, etc.</div>
+        <input type="text" name="Found Via" placeholder="Instagram, TikTok, friend…" required>
+      </div>
+
+      <div class="field-row">
+        <label class="title">Preferred days and times that work for you<span class="req">required</span></label>
+        <div class="hint">Dates aren't confirmed for most cities yet, so this just helps me plan. If you have any dates you'd like to avoid, or you're travelling in for the appointment, let me know here too.</div>
+        <textarea name="Availability" style="min-height:64px" required></textarea>
+      </div>
+    </div>
+
+    <!-- ANYTHING ELSE -->
+    <div class="chapter">
+      <div class="chapter-head"><span class="arrow">↓</span><span class="title">Anything else</span></div>
+
+      <div class="field-row">
+        <label class="title">Add any more info you'd like me to know</label>
+        <textarea name="Notes" style="min-height:60px"></textarea>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <button type="submit">
+        <span>Submit</span>
+        <span>→</span>
+      </button>
+      <div class="status" id="statusBox">Sending your request…</div>
+    </div>
+  </form>
+
+  <footer>Elise's Poked Pieces · Waitlist</footer>
+
+</div>
+
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const fileboxText = document.getElementById('fileboxText');
+  const fileboxLabel = document.getElementById('fileboxLabel');
+  fileInput.addEventListener('change', () => {
+    if(fileInput.files.length){
+      fileboxText.textContent = fileInput.files[0].name;
+      fileboxLabel.classList.add('has-file');
+    }
+  });
+
+  // Extra files, kept separate from the main input so email attachment stays reliable
+  let extraFiles = [];
+  const extraFilesList = document.getElementById('extraFilesList');
+  function renderExtraFiles(){
+    extraFilesList.innerHTML = extraFiles.map((f, i) => `
+      <div class="extra-file-row">
+        <span>${f.name}</span>
+        <button type="button" class="extra-file-remove" data-i="${i}">✕</button>
+      </div>
+    `).join('');
+    extraFilesList.querySelectorAll('.extra-file-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        extraFiles.splice(Number(btn.dataset.i), 1);
+        renderExtraFiles();
+      });
+    });
+  }
+  document.getElementById('addAnotherFileBtn').addEventListener('click', () => {
+    const temp = document.createElement('input');
+    temp.type = 'file';
+    temp.addEventListener('change', () => {
+      if(temp.files.length){
+        extraFiles.push(temp.files[0]);
+        renderExtraFiles();
+      }
+    });
+    temp.click();
+  });
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAGwKqASaB7-ryHpbjXMYANnpqP_KC7bC8",
+    authDomain: "toniagost-app.firebaseapp.com",
+    projectId: "toniagost-app",
+    storageBucket: "toniagost-app.firebasestorage.app",
+    messagingSenderId: "62278378303",
+    appId: "1:62278378303:web:ada753e0d88d2be3f2a98a"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const storage = firebase.storage();
+
+  const form = document.getElementById('bookingForm');
+  const statusBox = document.getElementById('statusBox');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    statusBox.classList.add('show');
+
+    let attachmentPaths = [];
+    let attachmentNames = [];
+    const allFiles = fileInput.files.length ? [fileInput.files[0], ...extraFiles] : extraFiles;
+
+    for(const file of allFiles){
+      try{
+        const safeName = Date.now() + '_' + Math.random().toString(36).slice(2,7) + '_' + file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+        const path = 'attachments/elise.allison16@gmail.com/' + safeName;
+        const ref = storage.ref().child(path);
+        await ref.put(file);
+        attachmentPaths.push(path);
+        attachmentNames.push(file.name);
+      } catch(err){
+        console.error('Could not upload attachment', file.name, err);
+      }
+    }
+
+    try{
+      await db.collection('requests').add({
+        first: form['First Name'].value,
+        last: form['Last Name'].value,
+        city: form['City'].value,
+        phone: [form['Area Code'].value, form['Phone Number'].value].filter(Boolean).join(' '),
+        pronouns: form['Pronouns'].value,
+        instagram: form['Instagram'].value,
+        age: form['Age'].value,
+        tattooCount: form['Tattoo Count'].value,
+        idea: form['Tattoo Idea'].value,
+        size: form['Size'].value,
+        placement: form['Placement'].value,
+        budget: form['Budget'].value,
+        foundVia: form['Found Via'].value,
+        availability: form['Availability'].value,
+        notes: form['Notes'].value,
+        attachmentPaths: attachmentPaths,
+        attachmentNames: attachmentNames,
+        status: 'New',
+        source: 'elise waitlist form',
+        owner: 'elise.allison16@gmail.com',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch(err){
+      console.error('Could not save to tracker', err);
+    }
+
+    form['_subject'].value = 'New waitlist request, ' + form['City'].value + ', ' + form['First Name'].value + ' ' + form['Last Name'].value;
+
+    form.submit();
+  });
+</script>
+
+</body>
+</html>
